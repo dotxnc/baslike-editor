@@ -24,7 +24,7 @@ static Color ored2 = (Color){255, 75, 75, 255};
 
 void DrawTextB(const char* text, int x, int y, int size, Color color)
 {
-    DrawTextEx(font, text, (Vector2){x,y}, size, 0, color);
+    DrawTextEx(font, text, (Vector2){x,y}, size, 2, color);
 }
 
 void append(char subject[], const char insert[], int pos) {
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     SetExitKey(KEY_F12);
     
     font = LoadSpriteFont("ProggyClean.ttf");
-    WIDTH = MeasureTextEx(font, " ", 13, 0).x;
+    WIDTH = MeasureTextEx(font, " ", 13, 0).x+2;
     HEIGHT = MeasureTextEx(font, " ", 13, 0).y;
     
     reset(&script);
