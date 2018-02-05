@@ -141,7 +141,6 @@ int main(int argc, char** argv)
         for (int i = 0; i < script.labelsize; i++) {
             DrawTextB(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 13, WHITE);
         }
-        DrawText("baslike", 100, 100, 40, WHITE);
         
         gui_label("Output", 640-80-80, 30, 75, 25);
         gui_label("Labels", 640-270, 30, 75, 25);
