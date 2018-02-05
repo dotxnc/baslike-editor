@@ -110,6 +110,12 @@ int main(int argc, char** argv)
                 cursorpos.x++;
             }
         }
+        if (IsKeyPressed(KEY_HOME)) {
+            cursorpos.x = 0;
+        }
+        if (IsKeyPressed(KEY_END)) {
+            cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
+        }
         
         if (IsFileDropped()) {
             int count;
@@ -136,7 +142,7 @@ int main(int argc, char** argv)
             char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
             DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
         }
-        DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, 13, (Color){155, 155, 155, 155});
+        DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, HEIGHT, (Color){155, 155, 155, 155});
         EndDrawing();
         DrawRectangle(640-160, 50, 155, 400, script.failed?ored1:ogreen1);
         DrawRectangleLines(640-160, 50, 155, 400, script.failed?ored2:ogreen2);
