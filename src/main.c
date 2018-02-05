@@ -17,12 +17,15 @@ static SpriteFont font;
 static int WIDTH;
 static int HEIGHT;
 static baslike_t script;
+static bool script_running = false;
 static pthread_t script_thread;
 
 static Color ogreen1 = (Color){100, 125, 100, 255};
 static Color ogreen2 = (Color){75, 255, 75, 255};
 static Color ored1 = (Color){125, 100, 100, 255};
 static Color ored2 = (Color){255, 75, 75, 255};
+static Color ogray1 = (Color){100, 100, 100, 255};
+static Color ogray2 = (Color){125, 125, 125, 255};
 
 void DrawTextB(const char* text, int x, int y, int size, Color color)
 {
@@ -41,7 +44,9 @@ void append(char subject[], const char insert[], int pos) {
 }
 
 void* runscript(void* code) {
+    script_running = true;
     execute(&script, code);
+    script_running = false;
     return NULL;
 }
 
@@ -151,12 +156,12 @@ int main(int argc, char** argv)
         }
         DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, HEIGHT, (Color){155, 155, 155, 155});
         EndDrawing();
-        DrawRectangle(640-160, 50, 155, 400, script.failed?ored1:ogreen1);
-        DrawRectangleLines(640-160, 50, 155, 400, script.failed?ored2:ogreen2);
+        DrawRectangle(640-160, 50, 155, 400, script_running?ogray1:script.failed?ored1:ogreen1);
+        DrawRectangleLines(640-160, 50, 155, 400, script_running?ogray2:script.failed?ored2:ogreen2);
         DrawText(script.output, 640-150, 60, 10, WHITE);
         
-        DrawRectangle(640-260, 50, 75, 400, script.failed?ored1:ogreen1);
-        DrawRectangleLines(640-260, 50, 75, 400, script.failed?ored2:ogreen2);
+        DrawRectangle(640-260, 50, 75, 400, script_running?ogray1:script.failed?ored1:ogreen1);
+        DrawRectangleLines(640-260, 50, 75, 400, script_running?ogray2:script.failed?ored2:ogreen2);
         for (int i = 0; i < script.labelsize; i++) {
             DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
         }
@@ -164,16 +169,20 @@ int main(int argc, char** argv)
         gui_label("Output", 640-80-80, 30, 75, 25);
         gui_label("Labels", 640-270, 30, 75, 25);
         if (gui_button("Execute", 640-80-80, 5, 75, 25)) {
+            pthread_cancel(script_thread);
+            script_running = false;
             char code[MAXLINES*MAXLENGTH] = "";
             for (int i = 0; i < numlines; i++) {
                 strcat(code, lines[i]);
-                strcat(code, " ");
+                strcat(code, "\n");
             }
-            pthread_cancel(script_thread);
-            pthread_create(&script_thread, NULL, runscript, code);
-            // execute(&script, code);
+            printf("%s\b", code);
+            pthread_create(&script_thread, NULL, runscript, &code);
         }
-        gui_button("Preprocess", 640-80, 5, 75, 25);
+        if (gui_button("Cancel", 640-80, 5, 75, 25)) {
+            pthread_cancel(script_thread);
+            script_running = false;
+        }
     }
     
     return 0;
