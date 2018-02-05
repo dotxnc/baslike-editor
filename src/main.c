@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <raylib.h>
 #include "script.h"
 #include "gui.h"
@@ -15,7 +16,8 @@ Vector2 cursorpos = {0,0};
 static SpriteFont font;
 static int WIDTH;
 static int HEIGHT;
-baslike_t script;
+static baslike_t script;
+static pthread_t script_thread;
 
 static Color ogreen1 = (Color){100, 125, 100, 255};
 static Color ogreen2 = (Color){75, 255, 75, 255};
@@ -36,6 +38,11 @@ void append(char subject[], const char insert[], int pos) {
     strcpy(buf+len, subject+pos);
 
     strcpy(subject, buf);
+}
+
+void* runscript(void* code) {
+    execute(&script, code);
+    return NULL;
 }
 
 int main(int argc, char** argv)
@@ -162,7 +169,9 @@ int main(int argc, char** argv)
                 strcat(code, lines[i]);
                 strcat(code, " ");
             }
-            execute(&script, code);
+            pthread_cancel(script_thread);
+            pthread_create(&script_thread, NULL, runscript, code);
+            // execute(&script, code);
         }
         gui_button("Preprocess", 640-80, 5, 75, 25);
     }
