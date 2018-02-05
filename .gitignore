@@ -1,0 +1,7 @@
+bin/editor*
+bin/editor
+bin/editor.exe
+obj/
+.vscode/
+!.gitignore
+edtior.sublime*
