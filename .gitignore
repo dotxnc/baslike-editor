@@ -1,6 +1,4 @@
-bin/editor*
-bin/editor
-bin/editor.exe
+bin/
 obj/
 .vscode/
 !.gitignore
