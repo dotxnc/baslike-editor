@@ -17,6 +17,11 @@ static int WIDTH;
 static int HEIGHT;
 baslike_t script;
 
+static Color ogreen1 = (Color){100, 125, 100, 255};
+static Color ogreen2 = (Color){75, 255, 75, 255};
+static Color ored1 = (Color){125, 100, 100, 255};
+static Color ored2 = (Color){255, 75, 75, 255};
+
 void DrawTextB(const char* text, int x, int y, int size, Color color)
 {
     DrawTextEx(font, text, (Vector2){x,y}, size, 0, color);
@@ -47,60 +52,61 @@ int main(int argc, char** argv)
     
     while (!WindowShouldClose()) {
         int c = GetKeyPressed();
-        if (c!=-1 && strlen(lines[(int)cursorpos.y]) < MAXLENGTH) {
+        if (c!=-1 && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH) {
             memmove(
-                lines[(int)cursorpos.y]+(int)cursorpos.x+1,
-                lines[(int)cursorpos.y]+(int)cursorpos.x,
+                lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,
+                lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
                 MAXLENGTH - ((int)cursorpos.x+1)
             );
-            lines[(int)cursorpos.y][(int)cursorpos.x] = c;
+            lines[(int)cursorpos.y+startline][(int)cursorpos.x] = c;
             cursorpos.x++;
         }
         if (IsKeyPressed(KEY_BACKSPACE)) {
             if (cursorpos.x > 0) {
-                for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y][i] = lines[(int)cursorpos.y][i + 1];
+                for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
                 cursorpos.x--;
             }
-            else if (strlen(lines[(int)cursorpos.y]) == 0 && cursorpos.y > 0) {
-                for (int i = cursorpos.y; i < MAXLINES-1; i++) {
+            else if (strlen(lines[(int)cursorpos.y+startline]) == 0 && cursorpos.y > 0) {
+                for (int i = cursorpos.y+startline; i < MAXLINES-1; i++) {
                     strcpy(lines[i], lines[i+1]);
                 }
-                cursorpos.y--;
-                cursorpos.x = strlen(lines[(int)cursorpos.y]);
+                
+                if (cursorpos.y < 2 && startline > 0){ startline--; } else { cursorpos.y--; }
+                cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
                 numlines--;
             }
         }
         if (IsKeyPressed(KEY_ENTER) && cursorpos.x<MAXLINES) {
-            for (int i = MAXLINES-1; i > cursorpos.y+1; i--) {
+            for (int i = MAXLINES-1; i > cursorpos.y+startline+1; i--) {
                 strcpy(lines[i], lines[i-1]);
             }
-            cursorpos.y++;
-            memset(lines[(int)cursorpos.y], '\0', MAXLENGTH);
-            if (cursorpos.x > strlen(lines[(int)cursorpos.y])) cursorpos.x = strlen(lines[(int)cursorpos.y]);
+            if (cursorpos.y > 30){ startline++; } else { cursorpos.y++; }
+            memset(lines[(int)cursorpos.y+startline], '\0', MAXLENGTH);
+            if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
             numlines++;
         }
         if (IsKeyPressed(KEY_LEFT) && cursorpos.x > 0) {
             cursorpos.x--;
         }
-        if (IsKeyPressed(KEY_RIGHT) && cursorpos.x < strlen(lines[(int)cursorpos.y])) {
+        if (IsKeyPressed(KEY_RIGHT) && cursorpos.x < strlen(lines[(int)cursorpos.y+startline])) {
             cursorpos.x++;
         }
-        if (IsKeyPressed(KEY_UP) && cursorpos.y > 0) {
-            cursorpos.y--;
-            if (cursorpos.x > strlen(lines[(int)cursorpos.y])) cursorpos.x = strlen(lines[(int)cursorpos.y]);
+        if (IsKeyPressed(KEY_UP) && cursorpos.y+startline > 0) {
+            if (cursorpos.y < 1){ startline--; } else { cursorpos.y--; }
+            if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
         }
-        if (IsKeyPressed(KEY_DOWN) && cursorpos.y < numlines-1) {
-            cursorpos.y++;
-            if (cursorpos.x > strlen(lines[(int)cursorpos.y])) cursorpos.x = strlen(lines[(int)cursorpos.y]);
+        if (IsKeyPressed(KEY_DOWN) && cursorpos.y+startline < numlines-1) {
+            if (cursorpos.y > 30){ startline++; } else { cursorpos.y++; }
+            if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
         }
-        if (IsKeyPressed(KEY_TAB) && strlen(lines[(int)cursorpos.y]) < MAXLENGTH-4) {
+        if (IsKeyPressed(KEY_TAB) && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH-4) {
             for (int i = 0; i < 4; i++) {
                 memmove(
-                    lines[(int)cursorpos.y]+(int)cursorpos.x+1,
-                    lines[(int)cursorpos.y]+(int)cursorpos.x,
+                    lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,
+                    lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
                     MAXLENGTH - ((int)cursorpos.x+1)
                 );
-                lines[(int)cursorpos.y][(int)cursorpos.x] = c;
+                lines[(int)cursorpos.y+startline][(int)cursorpos.x] = c;
                 cursorpos.x++;
             }
         }
@@ -127,19 +133,19 @@ int main(int argc, char** argv)
         ClearBackground(BLACK);
         BeginDrawing();
         for (int i = 0; i < DRAWMAX; i++) {
-            char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i<numlines?"":"~";
+            char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
             DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
         }
         DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, 13, (Color){155, 155, 155, 155});
         EndDrawing();
-        DrawRectangle(640-160, 50, 155, 400, (Color){125, 100, 100, 255});
-        DrawRectangleLines(640-160, 50, 155, 400, (Color){255, 75, 75, 255});
-        DrawTextB(script.output, 640-150, 60, 13, WHITE);
+        DrawRectangle(640-160, 50, 155, 400, script.failed?ored1:ogreen1);
+        DrawRectangleLines(640-160, 50, 155, 400, script.failed?ored2:ogreen2);
+        DrawText(script.output, 640-150, 60, 10, WHITE);
         
-        DrawRectangle(640-260, 50, 75, 400, (Color){125, 100, 100, 255});
-        DrawRectangleLines(640-260, 50, 75, 400, (Color){255, 75, 75, 255});
+        DrawRectangle(640-260, 50, 75, 400, script.failed?ored1:ogreen1);
+        DrawRectangleLines(640-260, 50, 75, 400, script.failed?ored2:ogreen2);
         for (int i = 0; i < script.labelsize; i++) {
-            DrawTextB(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 13, WHITE);
+            DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
         }
         
         gui_label("Output", 640-80-80, 30, 75, 25);

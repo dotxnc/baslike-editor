@@ -25,6 +25,7 @@ void reset(baslike_t* script) {
     script->opindex = 0;
     script->mds = 0;
     script->mdx = 0;
+    script->failed = false;
     memset(script->output, '\0', 1024);
 }
 
