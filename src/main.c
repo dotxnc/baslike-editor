@@ -123,6 +123,8 @@ int main(int argc, char** argv)
             }
             
             char* mem_text = FormatText("[%d, %d, %d, %d, %d, %d, %d, %d]", script.memory[0], script.memory[1], script.memory[2], script.memory[3], script.memory[4], script.memory[5], script.memory[6], script.memory[7]);
+            DrawRectangle(640-15-WIDTH*strlen(mem_text), 480-40, WIDTH*strlen(mem_text)+10, 20, DARKGRAY);
+            DrawRectangleLines(640-15-WIDTH*strlen(mem_text), 480-40, WIDTH*strlen(mem_text)+10, 20, WHITE);
             DrawTextB(mem_text, 640-10-WIDTH*strlen(mem_text), 480-35, 13, WHITE);
             
             gui_label("Output", 640-80-80, 30, 75, 25);
@@ -130,6 +132,7 @@ int main(int argc, char** argv)
             if (gui_button("Execute", 640-80-80, 5, 75, 25) && !editing_save) {
                 pthread_cancel(script_thread);
                 reset(&script);
+                script.failed = true;
                 script_running = false;
                 char code[MAXLINES*MAXLENGTH] = "";
                 for (int i = 0; i < numlines; i++) {
@@ -138,8 +141,9 @@ int main(int argc, char** argv)
                 }
                 pthread_create(&script_thread, NULL, runscript, &code);
             }
-            if (gui_button("Cancel", 640-80, 5, 75, 25) && !editing_save) {
+            if (gui_button("Cancel", 640-80, 5, 75, 25) && !editing_save && script_running) {
                 pthread_cancel(script_thread);
+                script.failed = true;
                 script_running = false;
             }
             
