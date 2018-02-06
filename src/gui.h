@@ -23,6 +23,6 @@ void gui_label(const char*, int, int, int, int);
 bool gui_button(const char*, int, int, int, int);
 bool gui_toggle(const char*, int, int, int, int, bool);
 int gui_tgroup(char**, int, int, int, int, int, int);
-void gui_textbox(char*, int, int, int, int, int);
+void gui_textbox(char*, int, int, int, int, int, bool*);
 
 #endif

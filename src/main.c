@@ -27,6 +27,9 @@ static Color ored2 = (Color){255, 75, 75, 255};
 static Color ogray1 = (Color){100, 100, 100, 255};
 static Color ogray2 = (Color){125, 125, 125, 255};
 
+static bool editing_save=false;
+static char file_save[23] = "";
+
 void DrawTextB(const char* text, int x, int y, int size, Color color)
 {
     DrawTextEx(font, text, (Vector2){x,y}, size, 2, color);
@@ -50,6 +53,18 @@ void* runscript(void* code) {
     return NULL;
 }
 
+void dump_text(char* file) {
+    FILE* fp;
+    fp = fopen(file, "w");
+    for (int i = 0; i < numlines; i++) {
+        fprintf(fp, "%s\n", lines[i]);
+    }
+    fclose(fp);
+}
+
+void handle_input();
+void handle_save();
+
 int main(int argc, char** argv)
 {
     InitWindow(640, 480, "BASLIKE 0.4");
@@ -63,76 +78,18 @@ int main(int argc, char** argv)
     reset(&script);
     
     while (!WindowShouldClose()) {
-        int c = GetKeyPressed();
-        if (c!=-1 && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH) {
-            memmove(
-                lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,
-                lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
-                MAXLENGTH - ((int)cursorpos.x+1)
-            );
-            lines[(int)cursorpos.y+startline][(int)cursorpos.x] = c;
-            cursorpos.x++;
-        }
-        if (IsKeyPressed(KEY_BACKSPACE)) {
-            if (cursorpos.x > 0) {
-                for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
-                cursorpos.x--;
-            }
-            else if (strlen(lines[(int)cursorpos.y+startline]) == 0 && cursorpos.y > 0) {
-                for (int i = cursorpos.y+startline; i < MAXLINES-1; i++) {
-                    strcpy(lines[i], lines[i+1]);
-                }
-                
-                if (cursorpos.y < 2 && startline > 0){ startline--; } else { cursorpos.y--; }
-                cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
-                numlines--;
-            }
-        }
-        if (IsKeyPressed(KEY_ENTER) && cursorpos.x<MAXLINES) {
-            for (int i = MAXLINES-1; i > cursorpos.y+startline+1; i--) {
-                strcpy(lines[i], lines[i-1]);
-            }
-            if (cursorpos.y > 30){ startline++; } else { cursorpos.y++; }
-            memset(lines[(int)cursorpos.y+startline], '\0', MAXLENGTH);
-            if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
-            numlines++;
-        }
-        if (IsKeyPressed(KEY_LEFT) && cursorpos.x > 0) {
-            cursorpos.x--;
-        }
-        if (IsKeyPressed(KEY_RIGHT) && cursorpos.x < strlen(lines[(int)cursorpos.y+startline])) {
-            cursorpos.x++;
-        }
-        if (IsKeyPressed(KEY_UP) && cursorpos.y+startline > 0) {
-            if (cursorpos.y < 1){ startline--; } else { cursorpos.y--; }
-            if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
-        }
-        if (IsKeyPressed(KEY_DOWN) && cursorpos.y+startline < numlines-1) {
-            if (cursorpos.y > 30){ startline++; } else { cursorpos.y++; }
-            if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
-        }
-        if (IsKeyPressed(KEY_TAB) && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH-4) {
-            for (int i = 0; i < 4; i++) {
-                memmove(
-                    lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,
-                    lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
-                    MAXLENGTH - ((int)cursorpos.x+1)
-                );
-                lines[(int)cursorpos.y+startline][(int)cursorpos.x] = c;
-                cursorpos.x++;
-            }
-        }
-        if (IsKeyPressed(KEY_HOME)) {
-            cursorpos.x = 0;
-        }
-        if (IsKeyPressed(KEY_END)) {
-            cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
+        handle_input();
+        handle_save();
+        
+        if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_S) && !editing_save) {
+            editing_save = true;
         }
         
         if (IsFileDropped()) {
             int count;
             char** files = GetDroppedFiles(&count);
-            printf("FILE DROPPED %d: %s\n", 0, files[0]);
+            for (int i = 0; i < MAXLINES; i++) { memset(lines[i], '\0', MAXLENGTH); }
+            numlines = 1;
             FILE* fp;
             char buffer[MAXLENGTH];
             fp = fopen(files[0], "r");
@@ -150,40 +107,138 @@ int main(int argc, char** argv)
         
         ClearBackground(BLACK);
         BeginDrawing();
-        for (int i = 0; i < DRAWMAX; i++) {
-            char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
-            DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
-        }
-        DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, HEIGHT, (Color){155, 155, 155, 155});
-        EndDrawing();
-        DrawRectangle(640-160, 50, 155, 400, script_running?ogray1:script.failed?ored1:ogreen1);
-        DrawRectangleLines(640-160, 50, 155, 400, script_running?ogray2:script.failed?ored2:ogreen2);
-        DrawText(script.output, 640-150, 60, 10, WHITE);
-        
-        DrawRectangle(640-260, 50, 75, 400, script_running?ogray1:script.failed?ored1:ogreen1);
-        DrawRectangleLines(640-260, 50, 75, 400, script_running?ogray2:script.failed?ored2:ogreen2);
-        for (int i = 0; i < script.labelsize; i++) {
-            DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
-        }
-        
-        gui_label("Output", 640-80-80, 30, 75, 25);
-        gui_label("Labels", 640-270, 30, 75, 25);
-        if (gui_button("Execute", 640-80-80, 5, 75, 25)) {
-            pthread_cancel(script_thread);
-            script_running = false;
-            char code[MAXLINES*MAXLENGTH] = "";
-            for (int i = 0; i < numlines; i++) {
-                strcat(code, lines[i]);
-                strcat(code, "\n");
+            for (int i = 0; i < DRAWMAX; i++) {
+                char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
+                DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
             }
-            printf("%s\b", code);
-            pthread_create(&script_thread, NULL, runscript, &code);
-        }
-        if (gui_button("Cancel", 640-80, 5, 75, 25)) {
-            pthread_cancel(script_thread);
-            script_running = false;
-        }
+            DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, HEIGHT, (Color){155, 155, 155, 155});
+            DrawRectangle(640-160, 50, 155, 380, script_running?ogray1:script.failed?ored1:ogreen1);
+            DrawRectangleLines(640-160, 50, 155, 380, script_running?ogray2:script.failed?ored2:ogreen2);
+            DrawText(script.output, 640-150, 60, 10, WHITE);
+            
+            DrawRectangle(640-260, 50, 75, 380, script_running?ogray1:script.failed?ored1:ogreen1);
+            DrawRectangleLines(640-260, 50, 75, 380, script_running?ogray2:script.failed?ored2:ogreen2);
+            for (int i = 0; i < script.labelsize; i++) {
+                DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
+            }
+            
+            gui_label("Output", 640-80-80, 30, 75, 25);
+            gui_label("Labels", 640-270, 30, 75, 25);
+            if (gui_button("Execute", 640-80-80, 5, 75, 25) && !editing_save) {
+                reset(&script);
+                pthread_cancel(script_thread);
+                script_running = false;
+                char code[MAXLINES*MAXLENGTH] = "";
+                for (int i = 0; i < numlines; i++) {
+                    strcat(code, lines[i]);
+                    strcat(code, "\n");
+                }
+                pthread_create(&script_thread, NULL, runscript, &code);
+            }
+            if (gui_button("Cancel", 640-80, 5, 75, 25) && !editing_save) {
+                pthread_cancel(script_thread);
+                script_running = false;
+            }
+            
+            if (editing_save) {
+                if (IsKeyPressed(KEY_ESCAPE)) editing_save = false;
+                DrawRectangle(0, 0, 640, 480, (Color){10, 10, 10, 200});
+                DrawRectangle(640/2-100, 480/2-30, 200, 25, (Color){100, 100, 100, 255});
+                DrawRectangleLines(640/2-100, 480/2-30, 200, 25, (Color){255, 255, 255, 255});
+                DrawTextB(file_save, 640/2-95, 480/2-23, 13, WHITE);
+                DrawRectangle(640/2-95+WIDTH*strlen(file_save), 480/2-23, WIDTH, HEIGHT, GRAY);
+            }
+        EndDrawing();
+        
     }
     
     return 0;
+}
+
+void handle_save()
+{
+    if (!editing_save) return;
+    int c = GetKeyPressed();
+    if (c!=-1 && strlen(file_save) < 23) {
+        file_save[strlen(file_save)] = c;
+    }
+    if (IsKeyPressed(KEY_BACKSPACE)) {
+        if (strlen(file_save) > 0) {
+            file_save[strlen(file_save)-1] = '\0';
+        }
+    }
+    if (IsKeyPressed(KEY_ENTER)) {
+        dump_text(file_save);
+        editing_save = false;
+    }
+}
+
+void handle_input()
+{
+    if (editing_save) return;
+    int c = GetKeyPressed();
+    if (c!=-1 && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH) {
+        memmove(
+            lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,
+            lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
+            MAXLENGTH - ((int)cursorpos.x+1)
+        );
+        lines[(int)cursorpos.y+startline][(int)cursorpos.x] = c;
+        cursorpos.x++;
+    }
+    if (IsKeyPressed(KEY_BACKSPACE)) {
+        if (cursorpos.x > 0) {
+            for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
+            cursorpos.x--;
+        }
+        else if (strlen(lines[(int)cursorpos.y+startline]) == 0 && cursorpos.y > 0) {
+            for (int i = cursorpos.y+startline; i < MAXLINES-1; i++) {
+                strcpy(lines[i], lines[i+1]);
+            }
+            
+            if (cursorpos.y < 2 && startline > 0){ startline--; } else { cursorpos.y--; }
+            cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
+            numlines--;
+        }
+    }
+    if (IsKeyPressed(KEY_ENTER) && cursorpos.x<MAXLINES) {
+        for (int i = MAXLINES-1; i > cursorpos.y+startline+1; i--) {
+            strcpy(lines[i], lines[i-1]);
+        }
+        if (cursorpos.y > 30){ startline++; } else { cursorpos.y++; }
+        memset(lines[(int)cursorpos.y+startline], '\0', MAXLENGTH);
+        if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
+        numlines++;
+    }
+    if (IsKeyPressed(KEY_LEFT) && cursorpos.x > 0) {
+        cursorpos.x--;
+    }
+    if (IsKeyPressed(KEY_RIGHT) && cursorpos.x < strlen(lines[(int)cursorpos.y+startline])) {
+        cursorpos.x++;
+    }
+    if (IsKeyPressed(KEY_UP) && cursorpos.y+startline > 0) {
+        if (cursorpos.y < 1){ startline--; } else { cursorpos.y--; }
+        if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
+    }
+    if (IsKeyPressed(KEY_DOWN) && cursorpos.y+startline < numlines-1) {
+        if (cursorpos.y > 30){ startline++; } else { cursorpos.y++; }
+        if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
+    }
+    if (IsKeyPressed(KEY_TAB) && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH-4) {
+        for (int i = 0; i < 4; i++) {
+            memmove(
+                lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,
+                lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
+                MAXLENGTH - ((int)cursorpos.x+1)
+            );
+            lines[(int)cursorpos.y+startline][(int)cursorpos.x] = c;
+            cursorpos.x++;
+        }
+    }
+    if (IsKeyPressed(KEY_HOME)) {
+        cursorpos.x = 0;
+    }
+    if (IsKeyPressed(KEY_END)) {
+        cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
+    }
 }

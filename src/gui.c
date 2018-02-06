@@ -127,7 +127,7 @@ int gui_tgroup(char** text, int x, int y, int w, int h, int count, int active)
     return active;
 }
 
-void gui_textbox(char* text, int x, int y, int w, int h, int max)
+void gui_textbox(char* text, int x, int y, int w, int h, int max, bool* editing)
 {
     static int frames = 0;
     static int backspace = 259;
@@ -145,6 +145,7 @@ void gui_textbox(char* text, int x, int y, int w, int h, int max)
     {
         state = FOCUSED;
         frames++;
+        *editing = true;
         
         int letter = -1;
         letter = GetKeyPressed();
@@ -172,6 +173,8 @@ void gui_textbox(char* text, int x, int y, int w, int h, int max)
                 }
             }
         }
+    } else {
+        *editing = false;
     }
     
     switch (state)
