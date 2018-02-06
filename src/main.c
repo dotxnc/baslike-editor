@@ -122,6 +122,9 @@ int main(int argc, char** argv)
                 DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
             }
             
+            char* mem_text = FormatText("[%d, %d, %d, %d, %d, %d, %d, %d]", script.memory[0], script.memory[1], script.memory[2], script.memory[3], script.memory[4], script.memory[5], script.memory[6], script.memory[7]);
+            DrawTextB(mem_text, 640-10-WIDTH*strlen(mem_text), 480-35, 13, WHITE);
+            
             gui_label("Output", 640-80-80, 30, 75, 25);
             gui_label("Labels", 640-270, 30, 75, 25);
             if (gui_button("Execute", 640-80-80, 5, 75, 25) && !editing_save) {
