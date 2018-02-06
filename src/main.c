@@ -125,8 +125,8 @@ int main(int argc, char** argv)
             gui_label("Output", 640-80-80, 30, 75, 25);
             gui_label("Labels", 640-270, 30, 75, 25);
             if (gui_button("Execute", 640-80-80, 5, 75, 25) && !editing_save) {
-                reset(&script);
                 pthread_cancel(script_thread);
+                reset(&script);
                 script_running = false;
                 char code[MAXLINES*MAXLENGTH] = "";
                 for (int i = 0; i < numlines; i++) {
@@ -177,7 +177,7 @@ void handle_input()
 {
     if (editing_save) return;
     int c = GetKeyPressed();
-    if (c!=-1 && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH) {
+    if (c!=-1 && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH && c!=KEY_TAB) {
         memmove(
             lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,
             lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
@@ -231,7 +231,7 @@ void handle_input()
                 lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
                 MAXLENGTH - ((int)cursorpos.x+1)
             );
-            lines[(int)cursorpos.y+startline][(int)cursorpos.x] = c;
+            lines[(int)cursorpos.y+startline][(int)cursorpos.x] = ' ';
             cursorpos.x++;
         }
     }
