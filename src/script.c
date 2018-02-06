@@ -41,23 +41,29 @@ void preprocess(baslike_t* script)
 
 void populate(baslike_t* script, char* text)
 {
+    for (int i = 0; i < strlen(text); i++) {
+        if (text[i] == '(') {
+            int end = -1;
+            for (int j = i; j < strlen(text); j++) {
+                if (text[j] == ')') {
+                    end = j;
+                    break;
+                }
+            }
+            if (end != -1)
+                for (int j = i; j < end+1; j++)
+                    text[j] = ' ';
+        }
+    }
+    
     int i;
     for (i=0;i<512;i++)memset(script->stack[i], '\0', 16);
     for (i=0;i<strlen(text);i++)if(text[i]=='\n')text[i]=' ';
     int index = 0;
     char *token = strtok(text, " \n");
     while(token) {
-        bool ignore = false;
-        for (i=0;i<strlen(token);i++) {
-            if (islower(token[i])) {
-                ignore = true;
-                break;
-            }
-        }
-        if (!ignore) {
-            strcpy(script->stack[index], token);
-            index++;
-        }
+        strcpy(script->stack[index], token);
+        index++;
         token = strtok(NULL, " ");
     }
     free(token);
