@@ -118,8 +118,11 @@ int main(int argc, char** argv)
             
             DrawRectangle(640-260, 50, 75, 380, script_running?ogray1:script.failed?ored1:ogreen1);
             DrawRectangleLines(640-260, 50, 75, 380, script_running?ogray2:script.failed?ored2:ogreen2);
-            for (int i = 0; i < script.labelsize; i++) {
-                DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
+            // for (int i = 0; i < script.labelsize; i++) {
+            //     DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
+            // }
+            for (int i = 0; i < script.functionsize; i++) {
+                DrawText(FormatText("%d:%s", script.functions[i].pos, script.stack[script.functions[i].pos]), 640-250, 60+i*13, 10, WHITE);
             }
             
             char* mem_text = FormatText("[%d, %d, %d, %d, %d, %d, %d, %d]", script.memory[0], script.memory[1], script.memory[2], script.memory[3], script.memory[4], script.memory[5], script.memory[6], script.memory[7]);

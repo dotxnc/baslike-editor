@@ -20,8 +20,11 @@ void reset(baslike_t* script) {
         script->memory[i] = 0;
     for (int i = 0; i < script->labelsize; i++)
         script->labels[i] = -1;
+    for (int i = 0; i < script->functionsize; i++)
+        script->functions[i] = (basfunc_t){};
     script->stacksize = 0;
     script->labelsize = 0;
+    script->functionsize = 0;
     script->opindex = 0;
     script->mds = 0;
     script->mdx = 0;
@@ -31,16 +34,39 @@ void reset(baslike_t* script) {
 
 void preprocess(baslike_t* script)
 {
+    // pre process labels/definitions
     for (int i = 0; i < script->stacksize; i++) {
         if (isop(script->stack[i]) == OP_DEF) {
             script->labels[script->labelsize] = i+1;
             script->labelsize++;
         }
     }
+    
+    // pre process functions
+    for (int i = 0; i < script->stacksize; i++) {
+        if (isop(script->stack[i]) == OP_FNC) {
+            basfunc_t function;
+            function.pos = i+1;
+            for (int j = i; j < script->stacksize; j++) {
+                if (isop(script->stack[j]) == OP_END) {
+                    function.end = j;
+                    break;
+                }
+            }
+            if (function.end == 0) {
+                scriptoutput(script, "ERROR: NO FNC END\n");
+                script->failed = true;
+                break;
+            }
+            script->functions[script->functionsize] = function;
+            script->functionsize++;
+        }
+    }
 }
 
 void populate(baslike_t* script, char* text)
 {
+    // pre pre process to get rid of comments
     for (int i = 0; i < strlen(text); i++) {
         if (text[i] == '(') {
             int end = -1;
@@ -56,6 +82,7 @@ void populate(baslike_t* script, char* text)
         }
     }
     
+    // populate stack full of opcodes
     int i;
     for (i=0;i<512;i++)memset(script->stack[i], '\0', 16);
     for (i=0;i<strlen(text);i++)if(text[i]=='\n')text[i]=' ';
@@ -321,8 +348,40 @@ void doop(baslike_t* script, int op)
                 script->memory[script->mds] /= atoi(script->stack[script->opindex+1]);
             script->opindex++;
         } break;
+        case OP_FNC: {
+            for (int i = script->opindex; i < script->stacksize; i++) {
+                if (isop(script->stack[i]) == OP_END) {
+                    script->opindex = i;
+                    break;
+                }
+            }
+        } break;
+        case OP_CAL: {
+            int oppos = script->opindex+1;
+            int fnc = -1;
+            for (int i = 0; i < script->functionsize; i++) {
+                if (!strcmp(script->stack[script->functions[i].pos], script->stack[oppos])) {
+                    fnc = i;
+                    break;
+                }
+            }
+            if (fnc < 0) {
+                scriptoutput(script, "ERROR: NO FUNCTION %s\n", script->stack[oppos]);
+                script->failed = true;
+            } else {
+                script->opindex = script->functions[fnc].pos+1;
+                for (; script->opindex < script->functions[fnc].end; script->opindex++) {
+                    doop(script, isop(script->stack[script->opindex]));
+                }
+            }
+            script->opindex = oppos;
+        } break;
+        case OP_END: {
+            script->opindex++;
+            scriptoutput(script, "OP_END:%d\n", script->opindex-1);
+        } break;
         default: {
-            scriptoutput(script->output, "UNDEFINED OPERATION (%s)\n", script->stack[script->opindex]);
+            scriptoutput(script->output, "UNHANDLED OPERATION (%s)\n", script->stack[script->opindex]);
         } break;
     }
 }
