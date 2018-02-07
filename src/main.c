@@ -30,6 +30,29 @@ static Color ogray2 = (Color){125, 125, 125, 255};
 static bool editing_save=false;
 static char file_save[23] = "";
 
+static Color syntax[OPS+1] = {
+    (Color){100, 100, 100, 255}, // non
+    (Color){155, 155, 100, 255}, // mds
+    (Color){155, 155, 100, 255}, // mdx
+    (Color){155, 100, 100, 255}, // ife
+    (Color){155, 100, 100, 255}, // ifl
+    (Color){155, 100, 100, 255}, // ifg
+    (Color){155, 100, 100, 255}, // els
+    (Color){155, 100, 100, 255}, // enf
+    (Color){100, 155, 155, 255}, // set
+    (Color){100, 155, 155, 255}, // add
+    (Color){100, 155, 155, 255}, // mul
+    (Color){100, 155, 155, 255}, // div
+    (Color){100, 155, 155, 255}, // neg
+    (Color){100, 100, 155, 255}, // prn
+    (Color){100, 100, 155, 255}, // mem
+    (Color){100, 155, 100, 255}, // def
+    (Color){100, 155, 100, 255}, // jmp
+    (Color){100, 155, 100, 255}, // fnc
+    (Color){100, 155, 100, 255}, // end
+    (Color){100, 155, 100, 255}, // cal
+};
+
 void DrawTextB(const char* text, int x, int y, int size, Color color)
 {
     DrawTextEx(font, text, (Vector2){x,y}, size, 2, color);
@@ -62,6 +85,19 @@ void dump_text(char* file) {
             fprintf(fp, "\n");
     }
     fclose(fp);
+}
+
+void tokenize(char* string, char** tokens, int* num) {
+    // char str[strlen(string+1)];
+    char* str = (char*)malloc(sizeof(char)*strlen(string)+1);
+    strcpy(str, string);
+    char *token = strtok(str, " ");
+    int n = 0;
+    while(token) {
+        tokens[n++] = token;
+        token = strtok(NULL, " ");
+    }
+    *num = n;
 }
 
 void handle_input();
@@ -111,7 +147,31 @@ int main(int argc, char** argv)
         BeginDrawing();
             for (int i = 0; i < DRAWMAX; i++) {
                 char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
-                DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
+                // DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
+                DrawTextB(FormatText("%03d: ", startline+i), 10, 10+i*13, 13, RAYWHITE);
+                
+                // syntax highlighter
+                int num = 0;
+                char* tokens[MAXLENGTH/2];
+                tokenize(l, tokens, &num);
+                int size = 0;
+                int op = -1;
+                for (int j = 0; j < num; j++) {
+                    op = isop(tokens[j]);
+                    for (int k = size; k < strlen(l); k++) {
+                        if (l[k] == ' ') size++;
+                        else break;
+                    }
+                    Color c = syntax[op+1];
+                    if (j > 0) {
+                        int lop = isop(tokens[j-1]);
+                        if (lop != OP_NON && op == OP_NON) {
+                            c = (Color){155, 155, 155, 255};
+                        }
+                    }
+                    DrawTextB(FormatText("%s", tokens[j]), 10+WIDTH*5+WIDTH*size, 10+i*13, 13, c);
+                    size += strlen(tokens[j]);
+                }
             }
             DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, HEIGHT, (Color){155, 155, 155, 155});
             DrawRectangle(640-160, 50, 155, 380, script_running?ogray1:script.failed?ored1:ogreen1);
