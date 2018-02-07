@@ -116,13 +116,17 @@ int main(int argc, char** argv)
             DrawRectangleLines(640-160, 50, 155, 380, script_running?ogray2:script.failed?ored2:ogreen2);
             DrawText(script.output, 640-150, 60, 10, WHITE);
             
-            DrawRectangle(640-260, 50, 75, 380, script_running?ogray1:script.failed?ored1:ogreen1);
-            DrawRectangleLines(640-260, 50, 75, 380, script_running?ogray2:script.failed?ored2:ogreen2);
-            // for (int i = 0; i < script.labelsize; i++) {
-            //     DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
-            // }
+            DrawRectangle(640-260, 50, 75, 180, script_running?ogray1:script.failed?ored1:ogreen1);
+            DrawRectangleLines(640-260, 50, 75, 180, script_running?ogray2:script.failed?ored2:ogreen2);
+            for (int i = 0; i < script.labelsize; i++) {
+                DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
+            }
+            
+            DrawRectangle(640-260, 250, 75, 180, script_running?ogray1:script.failed?ored1:ogreen1);
+            DrawRectangleLines(640-260, 250, 75, 180, script_running?ogray2:script.failed?ored2:ogreen2);
+            
             for (int i = 0; i < script.functionsize; i++) {
-                DrawText(FormatText("%d:%s", script.functions[i].pos, script.stack[script.functions[i].pos]), 640-250, 60+i*13, 10, WHITE);
+                DrawText(FormatText("%d:%s", script.functions[i].pos, script.stack[script.functions[i].pos]), 640-250, 260+i*13, 10, WHITE);
             }
             
             char* mem_text = FormatText("[%d, %d, %d, %d, %d, %d, %d, %d]", script.memory[0], script.memory[1], script.memory[2], script.memory[3], script.memory[4], script.memory[5], script.memory[6], script.memory[7]);
@@ -132,6 +136,7 @@ int main(int argc, char** argv)
             
             gui_label("Output", 640-80-80, 30, 75, 25);
             gui_label("Labels", 640-270, 30, 75, 25);
+            gui_label("Functions", 640-260, 230, 75, 25);
             if (gui_button("Execute", 640-80-80, 5, 75, 25) && !editing_save) {
                 pthread_cancel(script_thread);
                 reset(&script);
