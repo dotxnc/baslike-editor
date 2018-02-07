@@ -67,7 +67,7 @@ void handle_save();
 
 int main(int argc, char** argv)
 {
-    InitWindow(640, 480, "BASLIKE 0.5");
+    InitWindow(640, 480, "BASLIKE 0.6");
     SetTargetFPS(60);
     SetExitKey(KEY_F12);
     
