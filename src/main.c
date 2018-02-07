@@ -57,7 +57,9 @@ void dump_text(char* file) {
     FILE* fp;
     fp = fopen(file, "w");
     for (int i = 0; i < numlines; i++) {
-        fprintf(fp, "%s\n", lines[i]);
+        fprintf(fp, "%s", lines[i]);
+        if (i < numlines-1)
+            fprintf(fp, "\n");
     }
     fclose(fp);
 }
