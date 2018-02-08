@@ -32,25 +32,25 @@ static char file_save[23] = "";
 
 static Color syntax[OPS+1] = {
     (Color){100, 100, 100, 255}, // non
-    (Color){155, 155, 100, 255}, // mds
-    (Color){155, 155, 100, 255}, // mdx
-    (Color){155, 100, 100, 255}, // ife
-    (Color){155, 100, 100, 255}, // ifl
-    (Color){155, 100, 100, 255}, // ifg
-    (Color){155, 100, 100, 255}, // els
-    (Color){155, 100, 100, 255}, // enf
-    (Color){100, 155, 155, 255}, // set
-    (Color){100, 155, 155, 255}, // add
-    (Color){100, 155, 155, 255}, // mul
-    (Color){100, 155, 155, 255}, // div
-    (Color){100, 155, 155, 255}, // neg
-    (Color){100, 100, 155, 255}, // prn
-    (Color){100, 100, 155, 255}, // mem
-    (Color){100, 155, 100, 255}, // def
-    (Color){100, 155, 100, 255}, // jmp
-    (Color){100, 155, 100, 255}, // fnc
-    (Color){100, 155, 100, 255}, // end
-    (Color){100, 155, 100, 255}, // cal
+    (Color){200, 200, 100, 255}, // mds
+    (Color){200, 200, 100, 255}, // mdx
+    (Color){200, 100, 100, 255}, // ife
+    (Color){200, 100, 100, 255}, // ifl
+    (Color){200, 100, 100, 255}, // ifg
+    (Color){200, 100, 100, 255}, // els
+    (Color){200, 100, 100, 255}, // enf
+    (Color){100, 200, 200, 255}, // set
+    (Color){100, 200, 200, 255}, // add
+    (Color){100, 200, 200, 255}, // mul
+    (Color){100, 200, 200, 255}, // div
+    (Color){100, 200, 200, 255}, // neg
+    (Color){100, 100, 200, 255}, // prn
+    (Color){100, 100, 200, 255}, // mem
+    (Color){100, 200, 100, 255}, // def
+    (Color){100, 200, 100, 255}, // jmp
+    (Color){100, 200, 100, 255}, // fnc
+    (Color){100, 200, 100, 255}, // end
+    (Color){100, 200, 100, 255}, // cal
 };
 
 void DrawTextB(const char* text, int x, int y, int size, Color color)
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
                     if (j > 0) {
                         int lop = isop(tokens[j-1]);
                         if (lop != OP_NON && op == OP_NON) {
-                            c = (Color){155, 155, 155, 255};
+                            c = (Color){200, 200, 200, 255};
                         }
                     }
                     DrawTextB(FormatText("%s", tokens[j]), 10+WIDTH*5+WIDTH*size, 10+i*13, 13, c);
