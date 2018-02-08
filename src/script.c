@@ -29,6 +29,7 @@ void reset(baslike_t* script) {
     script->mds = 0;
     script->mdx = 0;
     script->failed = false;
+    script->error = -1;
     memset(script->output, '\0', 1024);
 }
 
@@ -47,6 +48,7 @@ void preprocess(baslike_t* script)
         if (isop(script->stack[i]) == OP_FNC) {
             basfunc_t function;
             function.pos = i+1;
+            function.end = 0;
             for (int j = i; j < script->stacksize; j++) {
                 if (isop(script->stack[j]) == OP_END) {
                     function.end = j;
@@ -55,6 +57,7 @@ void preprocess(baslike_t* script)
             }
             if (function.end == 0) {
                 scriptoutput(script, "ERROR: NO FNC END\n");
+                script->error = i;
                 script->failed = true;
                 break;
             }
@@ -109,7 +112,8 @@ void doop(baslike_t* script, int op)
     switch (op)
     {
         case OP_NON: {
-            scriptoutput(script->output, "NON OPERATION (%s:%d)\n", script->stack[script->opindex], script->opindex);
+            scriptoutput(script->output, "ERROR: NO OP (%s:%d)\n", script->stack[script->opindex], script->opindex);
+            script->error = script->opindex;
             script->failed=true;
         } break;
         case OP_MDS: {
@@ -132,6 +136,7 @@ void doop(baslike_t* script, int op)
             }
             if (enf == -1) {
                 scriptoutput(script->output, "ERROR: NO ENF\n");
+                script->error = script->opindex;
                 script->failed=true;
                 break;
             }
@@ -219,6 +224,7 @@ void doop(baslike_t* script, int op)
             }
             if (!found) {
                 scriptoutput(script->output, "ERROR: NO LABEL (%s)\n", script->stack[script->opindex+1]);
+                script->error = script->opindex;
                 script->failed=true;
                 break;
             }
@@ -238,6 +244,7 @@ void doop(baslike_t* script, int op)
             }
             if (enf == -1) {
                 scriptoutput(script->output, "ERROR: NO ENF\n");
+                script->error = script->opindex;
                 script->failed=true;
                 break;
             }
@@ -289,6 +296,7 @@ void doop(baslike_t* script, int op)
             }
             if (enf == -1) {
                 scriptoutput(script->output, "ERROR: NO ENF\n");
+                script->error = script->opindex;
                 script->failed=true;
                 break;
             }
@@ -367,6 +375,7 @@ void doop(baslike_t* script, int op)
             }
             if (fnc < 0) {
                 scriptoutput(script, "ERROR: NO FUNCTION %s\n", script->stack[oppos]);
+                script->error = script->opindex;
                 script->failed = true;
             } else {
                 script->opindex = script->functions[fnc].pos+1;

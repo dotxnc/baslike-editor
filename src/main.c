@@ -145,6 +145,7 @@ int main(int argc, char** argv)
         
         ClearBackground(BLACK);
         BeginDrawing();
+            int eindex = 0;
             for (int i = 0; i < DRAWMAX; i++) {
                 char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
                 // DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
@@ -169,8 +170,12 @@ int main(int argc, char** argv)
                             c = (Color){200, 200, 200, 255};
                         }
                     }
+                    if (script.failed && script.error > -1 && script.error == eindex) {
+                        DrawRectangle(10+WIDTH*5+WIDTH*size, 10+i*13, WIDTH*strlen(tokens[j]), 11, (Color){255, 0, 0, 200});
+                    }
                     DrawTextB(FormatText("%s", tokens[j]), 10+WIDTH*5+WIDTH*size, 10+i*13, 13, c);
                     size += strlen(tokens[j]);
+                    eindex++;
                 }
             }
             DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, HEIGHT, (Color){155, 155, 155, 155});
@@ -255,6 +260,7 @@ void handle_input()
     if (editing_save) return;
     int c = GetKeyPressed();
     if (c!=-1 && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH && c!=KEY_TAB) {
+        script.error = -1;
         memmove(
             lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,
             lines[(int)cursorpos.y+startline]+(int)cursorpos.x,
@@ -264,6 +270,7 @@ void handle_input()
         cursorpos.x++;
     }
     if (IsKeyPressed(KEY_BACKSPACE)) {
+        script.error = -1;
         if (cursorpos.x > 0) {
             for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
             cursorpos.x--;
@@ -279,6 +286,7 @@ void handle_input()
         }
     }
     if (IsKeyPressed(KEY_ENTER) && cursorpos.x<MAXLINES) {
+        script.error = -1;
         for (int i = MAXLINES-1; i > cursorpos.y+startline+1; i--) {
             strcpy(lines[i], lines[i-1]);
         }
@@ -302,6 +310,7 @@ void handle_input()
         if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
     }
     if (IsKeyPressed(KEY_TAB) && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH-4) {
+        script.error = -1;
         for (int i = 0; i < 4; i++) {
             memmove(
                 lines[(int)cursorpos.y+startline]+(int)cursorpos.x+1,

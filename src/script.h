@@ -29,6 +29,7 @@ typedef struct baslike_t {
     int functionsize;
     int mds;
     int mdx;
+    int error;
 } baslike_t;
 
 static void scriptoutput(baslike_t* script, char* fmt, ...) {
