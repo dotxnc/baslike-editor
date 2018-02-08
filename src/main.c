@@ -91,6 +91,20 @@ void tokenize(char* string, char** tokens, int* num) {
     // char str[strlen(string+1)];
     char* str = (char*)malloc(sizeof(char)*strlen(string)+1);
     strcpy(str, string);
+    for (int i = 0; i < strlen(str); i++) {
+        if (str[i] == '(') {
+            int end = -1;
+            for (int j = i; j < strlen(str); j++) {
+                if (str[j] == ')') {
+                    end = j;
+                    break;
+                }
+            }
+            if (end != -1)
+                for (int j = i; j < end+1; j++)
+                    str[j] = ' ';
+        }
+    }
     char *token = strtok(str, " ");
     int n = 0;
     while(token) {
@@ -149,7 +163,7 @@ int main(int argc, char** argv)
             for (int i = 0; i < DRAWMAX; i++) {
                 char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
                 // DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
-                DrawTextB(FormatText("%03d: ", startline+i), 10, 10+i*13, 13, RAYWHITE);
+                DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, syntax[0]);
                 
                 // syntax highlighter
                 int num = 0;
@@ -158,6 +172,11 @@ int main(int argc, char** argv)
                 int size = 0;
                 int op = -1;
                 for (int j = 0; j < num; j++) {
+                    bool iscomment = false;
+                    for (int k = 0; k < num; k++) {
+                        
+                    }
+                    
                     op = isop(tokens[j]);
                     for (int k = size; k < strlen(l); k++) {
                         if (l[k] == ' ') size++;
@@ -165,7 +184,7 @@ int main(int argc, char** argv)
                     }
                     Color c = syntax[op+1];
                     if (j > 0) {
-                        int lop = isop(tokens[j-1]);
+                        int lop = isop(tokens[j-1]); 
                         if (lop != OP_NON && op == OP_NON) {
                             c = (Color){200, 200, 200, 255};
                         }

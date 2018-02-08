@@ -49,9 +49,12 @@ void preprocess(baslike_t* script)
             basfunc_t function;
             function.pos = i+1;
             function.end = 0;
-            for (int j = i; j < script->stacksize; j++) {
+            for (int j = i+1; j < script->stacksize; j++) {
                 if (isop(script->stack[j]) == OP_END) {
                     function.end = j;
+                    break;
+                }
+                if (isop(script->stack[j]) == OP_FNC) {
                     break;
                 }
             }
@@ -381,6 +384,7 @@ void doop(baslike_t* script, int op)
                 script->opindex = script->functions[fnc].pos+1;
                 for (; script->opindex < script->functions[fnc].end; script->opindex++) {
                     doop(script, isop(script->stack[script->opindex]));
+                    if (script->failed) break;
                 }
             }
             script->opindex = oppos;
