@@ -161,7 +161,7 @@ int main(int argc, char** argv)
             for (int i = 0; i < DRAWMAX; i++) {
                 char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
                 // DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
-                DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, GREEN);
+                DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, syntax[0]);
                 
                 // syntax highlighter
                 int num = 0;
