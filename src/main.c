@@ -87,22 +87,20 @@ void dump_text(char* file) {
     fclose(fp);
 }
 
+static bool comment = false;
 void tokenize(char* string, char** tokens, int* num) {
     // char str[strlen(string+1)];
     char* str = (char*)malloc(sizeof(char)*strlen(string)+1);
     strcpy(str, string);
     for (int i = 0; i < strlen(str); i++) {
         if (str[i] == '(') {
-            int end = -1;
-            for (int j = i; j < strlen(str); j++) {
-                if (str[j] == ')') {
-                    end = j;
-                    break;
-                }
-            }
-            if (end != -1)
-                for (int j = i; j < end+1; j++)
-                    str[j] = ' ';
+            comment = true;
+        } else if (str[i] == ')') {
+            str[i] = ' ';
+            comment = false;
+        }
+        if (comment) {
+            str[i] = ' ';
         }
     }
     char *token = strtok(str, " ");
@@ -163,7 +161,7 @@ int main(int argc, char** argv)
             for (int i = 0; i < DRAWMAX; i++) {
                 char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
                 // DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
-                DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, syntax[0]);
+                DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, GREEN);
                 
                 // syntax highlighter
                 int num = 0;
@@ -172,11 +170,6 @@ int main(int argc, char** argv)
                 int size = 0;
                 int op = -1;
                 for (int j = 0; j < num; j++) {
-                    bool iscomment = false;
-                    for (int k = 0; k < num; k++) {
-                        
-                    }
-                    
                     op = isop(tokens[j]);
                     for (int k = size; k < strlen(l); k++) {
                         if (l[k] == ' ') size++;
