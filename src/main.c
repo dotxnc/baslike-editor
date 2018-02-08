@@ -9,9 +9,10 @@
 #define MAXLENGTH 64
 #define DRAWMAX 35
 static int startline = 0;
-char lines[MAXLINES][MAXLENGTH];
-int numlines=1;
-Vector2 cursorpos = {0,0};
+static char lines[MAXLINES][MAXLENGTH];
+static int numlines=1;
+static Vector2 cursorpos = {0,0};
+static int cursorop = -1;
 
 static SpriteFont font;
 static int WIDTH;
@@ -152,11 +153,13 @@ int main(int argc, char** argv)
                 numlines++;
             }
             fclose(fp);
+            strcpy(file_save, GetFileName(files[0]));
             ClearDroppedFiles();
         }
         
         ClearBackground(BLACK);
         BeginDrawing();
+            cursorop = -1;
             int eindex = 0;
             for (int i = 0; i < DRAWMAX; i++) {
                 char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
@@ -186,11 +189,15 @@ int main(int argc, char** argv)
                         DrawRectangle(10+WIDTH*5+WIDTH*size, 10+i*13, WIDTH*strlen(tokens[j]), 11, (Color){255, 0, 0, 200});
                     }
                     DrawTextB(FormatText("%s", tokens[j]), 10+WIDTH*5+WIDTH*size, 10+i*13, 13, c);
+                    if (cursorpos.y+startline == i && cursorpos.x > size-1 && cursorpos.x < size+strlen(tokens[j])) {
+                        cursorop = eindex;
+                    }
                     size += strlen(tokens[j]);
                     eindex++;
                 }
             }
-            DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT, WIDTH+1, HEIGHT, (Color){155, 155, 155, 155});
+            DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT-1, WIDTH+1, HEIGHT+3, (Color){155, 155, 155, 155});
+            
             DrawRectangle(640-160, 50, 155, 380, script_running?ogray1:script.failed?ored1:ogreen1);
             DrawRectangleLines(640-160, 50, 155, 380, script_running?ogray2:script.failed?ored2:ogreen2);
             DrawText(script.output, 640-150, 60, 10, WHITE);
@@ -198,15 +205,17 @@ int main(int argc, char** argv)
             DrawRectangle(640-260, 50, 75, 180, script_running?ogray1:script.failed?ored1:ogreen1);
             DrawRectangleLines(640-260, 50, 75, 180, script_running?ogray2:script.failed?ored2:ogreen2);
             for (int i = 0; i < script.labelsize; i++) {
-                DrawText(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 10, WHITE);
+                DrawTextB(FormatText("%d:%s", script.labels[i], script.stack[script.labels[i]]), 640-250, 60+i*13, 13, WHITE);
             }
             
             DrawRectangle(640-260, 250, 75, 180, script_running?ogray1:script.failed?ored1:ogreen1);
             DrawRectangleLines(640-260, 250, 75, 180, script_running?ogray2:script.failed?ored2:ogreen2);
             
             for (int i = 0; i < script.functionsize; i++) {
-                DrawText(FormatText("%d:%s", script.functions[i].pos, script.stack[script.functions[i].pos]), 640-250, 260+i*13, 10, WHITE);
+                DrawTextB(FormatText("%d:%s", script.functions[i].pos, script.stack[script.functions[i].pos]), 640-250, 260+i*13, 13, WHITE);
             }
+            
+            DrawTextB(FormatText("OP: %d", cursorop), 10, 480-15, 13, WHITE);
             
             char* mem_text = FormatText("[%d, %d, %d, %d, %d, %d, %d, %d]", script.memory[0], script.memory[1], script.memory[2], script.memory[3], script.memory[4], script.memory[5], script.memory[6], script.memory[7]);
             DrawRectangle(640-15-WIDTH*strlen(mem_text), 480-40, WIDTH*strlen(mem_text)+10, 20, DARKGRAY);

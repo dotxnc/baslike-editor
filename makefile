@@ -11,7 +11,7 @@ CC =
 ifeq ($(OS),Windows_NT)
 	OUT = $(NAME).exe
 	CC += clang
-	LIBS = -lraylib -lglfw3 -lopengl32 -lgdi32 -lws2_32 -lpthread
+	LIBS = -lraylib -lglfw3 -lopengl32 -lgdi32 -lws2_32 -lpthread -mwindows
 else
 	OUT = $(NAME)
 	CC += gcc
