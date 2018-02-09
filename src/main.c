@@ -196,7 +196,7 @@ int main(int argc, char** argv)
                     eindex++;
                 }
             }
-            DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT-1, WIDTH+1, HEIGHT+3, (Color){155, 155, 155, 155});
+            DrawRectangle(10+WIDTH*5+cursorpos.x*WIDTH, 10+cursorpos.y*HEIGHT-1, WIDTH+1, HEIGHT+2, (Color){155, 155, 155, 155});
             
             DrawRectangle(640-160, 50, 155, 380, script_running?ogray1:script.failed?ored1:ogreen1);
             DrawRectangleLines(640-160, 50, 155, 380, script_running?ogray2:script.failed?ored2:ogreen2);
