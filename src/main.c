@@ -28,6 +28,7 @@ static Color ored2 = (Color){255, 75, 75, 255};
 static Color ogray1 = (Color){100, 100, 100, 255};
 static Color ogray2 = (Color){125, 125, 125, 255};
 
+static bool create_new=false;
 static bool editing_save=false;
 static char file_save[23] = "";
 
@@ -115,6 +116,7 @@ void tokenize(char* string, char** tokens, int* num) {
 
 void handle_input();
 void handle_save();
+void handle_new();
 
 int main(int argc, char** argv)
 {
@@ -131,9 +133,15 @@ int main(int argc, char** argv)
     while (!WindowShouldClose()) {
         handle_input();
         handle_save();
+        handle_new();
         
-        if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_S) && !editing_save) {
-            editing_save = true;
+        if (IsKeyDown(KEY_LEFT_CONTROL)) {
+            if (IsKeyPressed(KEY_S) && !editing_save && !create_new) {
+                editing_save = true;
+            }
+            if (IsKeyPressed(KEY_N) && !create_new && !editing_save) {
+                create_new = true;
+            }
         }
         
         if (IsFileDropped()) {
@@ -251,11 +259,32 @@ int main(int argc, char** argv)
                 DrawTextB(file_save, 640/2-95, 480/2-23, 13, WHITE);
                 DrawRectangle(640/2-95+WIDTH*strlen(file_save), 480/2-23, WIDTH, HEIGHT, GRAY);
             }
+            if (create_new) {
+                DrawRectangle(0, 0, 640, 480, (Color){10, 10, 10, 200});
+                DrawRectangle(640/2-100, 480/2-30, 200, 25, (Color){100, 100, 100, 255});
+                DrawRectangleLines(640/2-100, 480/2-30, 200, 25, (Color){255, 255, 255, 255});
+                DrawTextB("Are you sure you? Y/N", 640/2-95, 480/2-23, 13, WHITE);
+            }
         EndDrawing();
         
     }
     
     return 0;
+}
+
+void handle_new()
+{
+    if (!create_new) return;
+    if (IsKeyPressed(KEY_Y)) {
+        for (int i = 0; i < MAXLINES; i++) { memset(lines[i], '\0', MAXLENGTH); }
+        numlines = 1;
+        create_new = false;
+        cursorpos.x = 0;
+        cursorpos.y = 0;
+    }
+    if (IsKeyPressed(KEY_N) || IsKeyPressed(KEY_ESCAPE)) {
+        create_new = false;
+    }
 }
 
 void handle_save()
@@ -278,7 +307,7 @@ void handle_save()
 
 void handle_input()
 {
-    if (editing_save) return;
+    if (editing_save || create_new) return;
     int c = GetKeyPressed();
     if (c!=-1 && strlen(lines[(int)cursorpos.y+startline]) < MAXLENGTH && c!=KEY_TAB) {
         script.error = -1;
