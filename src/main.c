@@ -120,7 +120,7 @@ void handle_new();
 
 int main(int argc, char** argv)
 {
-    InitWindow(640, 480, "BASLIKE 0.6.2");
+    InitWindow(640, 480, "BASLIKE 0.6.3");
     SetTargetFPS(60);
     SetExitKey(KEY_F12);
     

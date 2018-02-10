@@ -370,6 +370,8 @@ void doop(baslike_t* script, int op)
         case OP_CAL: {
             int oppos = script->opindex+1;
             int fnc = -1;
+            int opmds = script->mds;
+            int opmdx = script->mdx;
             for (int i = 0; i < script->functionsize; i++) {
                 if (!strcmp(script->stack[script->functions[i].pos], script->stack[oppos])) {
                     fnc = i;
@@ -387,6 +389,8 @@ void doop(baslike_t* script, int op)
                     if (script->failed) break;
                 }
             }
+            script->mds = opmds;
+            script->mdx = opmdx;
             script->opindex = oppos;
         } break;
         case OP_END: {
