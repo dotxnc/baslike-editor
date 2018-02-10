@@ -322,15 +322,8 @@ void handle_input()
     if (IsKeyPressed(KEY_BACKSPACE)) {
         script.error = -1;
         if (cursorpos.x > 0) {
-            if ((int)(cursorpos.x)%4 == 0) {
-                for(int j = 0; j < 4; j++) {
-                    for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
-                    cursorpos.x--;
-                }
-            } else {
-                for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
-                cursorpos.x--;
-            }
+            for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
+            cursorpos.x--;
         }
         else if (strlen(lines[(int)cursorpos.y+startline]) == 0 && cursorpos.y > 0) {
             for (int i = cursorpos.y+startline; i < MAXLINES-1; i++) {
