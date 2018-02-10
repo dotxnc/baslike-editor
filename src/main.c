@@ -322,11 +322,7 @@ void handle_input()
     if (IsKeyPressed(KEY_BACKSPACE)) {
         script.error = -1;
         if (cursorpos.x > 0) {
-            int num = 0;
-            for (int i = cursorpos.x-1; i >= 0; i--)
-                if (lines[(int)cursorpos.y+startline][i] == ' ')
-                    num++;
-            if (num >= 4 && (int)(cursorpos.x)%4 == 0) {
+            if ((int)(cursorpos.x)%4 == 0) {
                 for(int j = 0; j < 4; j++) {
                     for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
                     cursorpos.x--;
