@@ -322,8 +322,19 @@ void handle_input()
     if (IsKeyPressed(KEY_BACKSPACE)) {
         script.error = -1;
         if (cursorpos.x > 0) {
-            for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
-            cursorpos.x--;
+            int num = 0;
+            for (int i = cursorpos.x-1; i >= 0; i--)
+                if (lines[(int)cursorpos.y+startline][i] == ' ')
+                    num++;
+            if (num >= 4 && (int)(cursorpos.x)%4 == 0) {
+                for(int j = 0; j < 4; j++) {
+                    for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
+                    cursorpos.x--;
+                }
+            } else {
+                for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
+                cursorpos.x--;
+            }
         }
         else if (strlen(lines[(int)cursorpos.y+startline]) == 0 && cursorpos.y > 0) {
             for (int i = cursorpos.y+startline; i < MAXLINES-1; i++) {
@@ -342,6 +353,16 @@ void handle_input()
         }
         if (cursorpos.y > 30){ startline++; } else { cursorpos.y++; }
         memset(lines[(int)cursorpos.y+startline], '\0', MAXLENGTH);
+        int indent = 0;
+        for (int i = 0; i < strlen(lines[(int)cursorpos.y+startline-1]); i++)
+            if (lines[(int)cursorpos.y+startline-1][i] == ' ')
+                indent++;
+            else
+                break;
+        for (int i = 0; i < indent; i++) {
+            lines[(int)cursorpos.y+startline][i] = ' ';
+            cursorpos.x++;
+        }
         if (cursorpos.x > strlen(lines[(int)cursorpos.y+startline])) cursorpos.x = strlen(lines[(int)cursorpos.y+startline]);
         numlines++;
     }
