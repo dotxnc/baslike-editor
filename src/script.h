@@ -10,6 +10,7 @@
 
 #define OPS 19
 #define MEM 8
+#define ARGS 10
 
 typedef struct basfunc_t {
     int pos;
@@ -18,7 +19,7 @@ typedef struct basfunc_t {
 
 typedef struct baslike_t {
     char output[1024];
-    char stack[512][16];
+    char stack[512][32];
     int stacksize;
     int opindex;
     bool failed;
@@ -30,6 +31,8 @@ typedef struct baslike_t {
     int mds;
     int mdx;
     int error;
+    int args[ARGS];
+    bool infunction;
 } baslike_t;
 
 static void scriptoutput(baslike_t* script, char* fmt, ...) {
@@ -41,9 +44,46 @@ static void scriptoutput(baslike_t* script, char* fmt, ...) {
     strcat(script->output, buf);
 }
 
+static bool startswith(const char* str, const char* text) {
+    if (strlen(text) > strlen(str)) return false;
+    for (int i = 0; i < strlen(text); i++) if (str[i] != text[i]) return false;
+    return true;
+}
+
+static void parseargs(baslike_t* script, char* _args) {
+    char* args = (char*)malloc(sizeof(char)*strlen(_args)+1);
+    strcpy(args, _args);
+    
+    args++;
+    args[strlen(args)-1] = '\0';
+    
+    int index = 0;
+    char *token = strtok(args, ",");
+    while(token && index < 10) {
+        if (token[0] == '#') {
+            token++;
+            if (atoi(token) > 9 || atoi(token) < 0) {
+                script->failed = true;
+                script->error = script->opindex;
+                scriptoutput(script, "ERROR: OUT OF RANGE\n");
+            }
+            script->args[index] = script->memory[atoi(token)];
+        } else if (!strcmp(token, "MDS")) {
+            script->args[index] = script->memory[script->mds];
+        } else if (!strcmp(token, "MDX")) {
+            script->args[index] = script->memory[script->mdx];
+        } else {
+            script->args[index] = atoi(token);
+        }
+        index++;
+        token = strtok(NULL, ",");
+    }
+    free(token);
+}
+
 void execute    (baslike_t*, char*);
 void populate   (baslike_t*, char*);
-int  isop       ( char*);
+int  isop       (            char*);
 void doop       (baslike_t*,   int);
 void reset      (baslike_t*       );
 void preprocess (baslike_t*       );
