@@ -174,7 +174,6 @@ int main(int argc, char** argv)
             int eindex = 0;
             for (int i = 0; i < DRAWMAX; i++) {
                 char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
-                // DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, RAYWHITE);
                 DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, syntax[0]);
                 
                 // syntax highlighter
@@ -192,7 +191,7 @@ int main(int argc, char** argv)
                     Color c = syntax[op+1];
                     if (j > 0) {
                         int lop = isop(tokens[j-1]); 
-                        if (lop != OP_NON && op == OP_NON) {
+                        if ((lop != OP_NON && op == OP_NON) || (tokens[j][0] == '<' && tokens[j][strlen(tokens[j])-1] == '>')) {
                             c = (Color){200, 200, 200, 255};
                         }
                     }
