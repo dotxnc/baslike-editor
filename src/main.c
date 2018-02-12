@@ -53,6 +53,9 @@ static Color syntax[OPS+1] = {
     (Color){100, 200, 100, 255}, // fnc
     (Color){100, 200, 100, 255}, // end
     (Color){100, 200, 100, 255}, // cal
+    (Color){100, 200, 150, 255}, // ret
+    (Color){100, 200, 150, 255}, // push
+    (Color){100, 200, 150, 255}, // pop
 };
 
 void DrawTextB(const char* text, int x, int y, int size, Color color)
@@ -120,7 +123,7 @@ void handle_new();
 
 int main(int argc, char** argv)
 {
-    InitWindow(640, 480, "BASLIKE 0.7.0");
+    InitWindow(640, 480, "BASLIKE 0.8.0");
     SetTargetFPS(60);
     SetExitKey(KEY_F12);
     

@@ -16,8 +16,10 @@ void execute(baslike_t* script, char* text)
 void reset(baslike_t* script) {
     for (int i = 0; i < script->stacksize; i++)
         memset(script->stack[i], '\0', 32);
-    for (int i = 0; i < MEM; i++)
+    for (int i = 0; i < MEM; i++) {
         script->memory[i] = 0;
+        script->snapshot[i] = 0;
+    }
     for (int i = 0; i < script->labelsize; i++)
         script->labels[i] = -1;
     for (int i = 0; i < script->functionsize; i++)
@@ -31,6 +33,7 @@ void reset(baslike_t* script) {
     script->failed = false;
     script->error = -1;
     script->infunction = false;
+    script->ret = 0;
     memset(script->output, '\0', 1024);
 }
 
@@ -147,6 +150,7 @@ void doop(baslike_t* script, int op)
             int m;
             bool jumped=false;
             if (isop(script->stack[script->opindex+1]) == OP_MDX) m = script->memory[script->mdx];
+            else if (isop(script->stack[script->opindex+1]) == OP_RET) m = script->ret;
             else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
                 char* s = script->stack[script->opindex+1];
                 s+=3;
@@ -186,6 +190,8 @@ void doop(baslike_t* script, int op)
             int setop = isop(script->stack[script->opindex+1]);
             if (setop == OP_MDX)
                 script->memory[script->mds] = script->memory[script->mdx];
+            else if (setop == OP_RET)
+                script->memory[script->mds] = script->ret;
             else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
                 char* s = script->stack[script->opindex+1];
                 s+=3;
@@ -199,6 +205,8 @@ void doop(baslike_t* script, int op)
             int addop = isop(script->stack[script->opindex+1]);
             if (addop == OP_MDX)
                 script->memory[script->mds] += script->memory[script->mdx];
+            else if (addop == OP_RET)
+                script->memory[script->mds] += script->ret;
             else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
                 char* s = script->stack[script->opindex+1];
                 s+=3;
@@ -270,6 +278,7 @@ void doop(baslike_t* script, int op)
             int m;
             bool jumped=false;
             if (isop(script->stack[script->opindex+1]) == OP_MDX) m = script->memory[script->mdx];
+            else if (isop(script->stack[script->opindex+1]) == OP_RET) m = script->ret;
             else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
                 char* s = script->stack[script->opindex+1];
                 s+=3;
@@ -327,6 +336,7 @@ void doop(baslike_t* script, int op)
             int m;
             bool jumped=false;
             if (isop(script->stack[script->opindex+1]) == OP_MDX) m = script->memory[script->mdx];
+            else if (isop(script->stack[script->opindex+1]) == OP_RET) m = script->ret;
             else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
                 char* s = script->stack[script->opindex+1];
                 s+=3;
@@ -373,6 +383,8 @@ void doop(baslike_t* script, int op)
             int addop = isop(script->stack[script->opindex+1]);
             if (addop == OP_MDX)
                 script->memory[script->mds] *= script->memory[script->mdx];
+            else if (addop == OP_RET)
+                script->memory[script->mds] *= script->ret;
             else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
                 char* s = script->stack[script->opindex+1];
                 s+=3;
@@ -386,6 +398,8 @@ void doop(baslike_t* script, int op)
             int addop = isop(script->stack[script->opindex+1]);
             if (addop == OP_MDX)
                 script->memory[script->mds] /= script->memory[script->mdx];
+            else if (addop == OP_RET)
+                script->memory[script->mds] /= script->ret;
             else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
                 char* s = script->stack[script->opindex+1];
                 s+=3;
@@ -440,6 +454,31 @@ void doop(baslike_t* script, int op)
         case OP_END: {
             script->opindex++;
             scriptoutput(script, "OP_END:%d\n", script->opindex-1);
+        } break;
+        case OP_RET: {
+            int m = 0;
+            if (isop(script->stack[script->opindex+1]) == OP_MDX) m = script->memory[script->mdx];
+            else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
+                char* s = script->stack[script->opindex+1];
+                s+=3;
+                m = script->args[atoi(s)];
+            }
+            else m = atoi(script->stack[script->opindex+1]);
+            
+            if (script->infunction) {
+                script->ret = m;
+            }
+            script->opindex++;
+        } break;
+        case OP_PUSH: {
+            for (int i = 0; i < MEM; i++) {
+                script->snapshot[i] = script->memory[i];
+            }
+        } break;
+        case OP_POP: {
+            for (int i = 0; i < MEM; i++) {
+                script->memory[i] = script->snapshot[i];
+            }
         } break;
         default: {
             scriptoutput(script->output, "UNHANDLED OPERATION (%s)\n", script->stack[script->opindex]);

@@ -8,9 +8,10 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
-#define OPS 19
+#define OPS 22
 #define MEM 8
 #define ARGS 10
+#define FNCS 16;
 
 typedef struct basfunc_t {
     int pos;
@@ -24,6 +25,7 @@ typedef struct baslike_t {
     int opindex;
     bool failed;
     int memory[MEM];
+    int snapshot[MEM];
     int labels[512];
     int labelsize;
     basfunc_t functions[512];
@@ -32,6 +34,7 @@ typedef struct baslike_t {
     int mdx;
     int error;
     int args[ARGS];
+    int ret;
     bool infunction;
 } baslike_t;
 
@@ -107,6 +110,9 @@ static char* ops[OPS] = {
     "FNC",
     "END",
     "CAL",
+    "RET",
+    "PUSH",
+    "POP",
 };
 enum {
     OP_NON=-1, // not an operation
@@ -129,6 +135,9 @@ enum {
     OP_FNC,    // define function
     OP_END,    // end functions
     OP_CAL,    // call function
+    OP_RET,    // function return register
+    OP_PUSH,   // push current memory state
+    OP_POP,    // pop current memory state
 };
 
 #endif
