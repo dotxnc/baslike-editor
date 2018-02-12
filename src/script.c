@@ -32,8 +32,6 @@ void reset(baslike_t* script) {
         script->labels[i] = -1;
     for (int i = 0; i < script->functionsize; i++)
         script->functions[i] = (basfunc_t){};
-    // for (int i = 0; i < script->numlinks; i++)
-    //     script->linkedfunctions[i] = (baslink_t){};
     script->stacksize = 0;
     script->labelsize = 0;
     script->functionsize = 0;
@@ -44,7 +42,7 @@ void reset(baslike_t* script) {
     script->error = -1;
     script->infunction = false;
     script->ret = 0;
-    memset(script->output, '\0', 1024);
+    memset(script, '\0', 1024);
 }
 
 void preprocess(baslike_t* script)
@@ -129,7 +127,7 @@ void doop(baslike_t* script, int op)
     switch (op)
     {
         case OP_NON: {
-            scriptoutput(script->output, "ERROR: NO OP (%s:%d)\n", script->stack[script->opindex], script->opindex);
+            scriptoutput(script, "ERROR: NO OP (%s:%d)\n", script->stack[script->opindex], script->opindex);
             script->error = script->opindex;
             script->failed=true;
         } break;
@@ -152,7 +150,7 @@ void doop(baslike_t* script, int op)
                 }
             }
             if (enf == -1) {
-                scriptoutput(script->output, "ERROR: NO ENF\n");
+                scriptoutput(script, "ERROR: NO ENF\n");
                 script->error = script->opindex;
                 script->failed=true;
                 break;
@@ -230,22 +228,30 @@ void doop(baslike_t* script, int op)
             
         } break;
         case OP_PRN: {
-            if (isop(script->stack[script->opindex+1]) == OP_MDX)
-                scriptoutput(script->output, "MDX: %d\n", script->memory[script->mdx]);
-            else if (isop(script->stack[script->opindex+1]) == OP_MDS)
-                scriptoutput(script->output, "MDS: %d\n", script->memory[script->mds]);
+            int nop = isop(script->stack[script->opindex+1]);
+            if (nop == OP_MDX)
+                scriptoutput(script, "MDX: %d\n", script->memory[script->mdx]);
+            else if (nop == OP_MDS)
+                scriptoutput(script, "MDS: %d\n", script->memory[script->mds]);
+            else if (nop == OP_RET)
+                scriptoutput(script, "RET: %d\n", script->ret);
+            else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
+                char* s = script->stack[script->opindex+1];
+                s+=3;
+                scriptoutput(script, "%s: %d\n", script->stack[script->opindex+1], script->args[atoi(s)]);
+            }
             else
-                scriptoutput(script->output, "OUT: %s\n", script->stack[script->opindex+1]);
+                scriptoutput(script, "OUT: %s\n", script->stack[script->opindex+1]);
             script->opindex++;
         } break;
         case OP_ELS: {
         } break;
         case OP_MEM: {
-            scriptoutput(script->output, "MEM: ");
+            scriptoutput(script, "MEM: ");
             for (int i = 0; i < MEM; i++) {
-                scriptoutput(script->output, "%d ", script->memory[i]);
+                scriptoutput(script, "%d ", script->memory[i]);
             }
-            scriptoutput(script->output, "\n");
+            scriptoutput(script, "\n");
         } break;
         case OP_DEF: {
             script->opindex++;
@@ -260,7 +266,7 @@ void doop(baslike_t* script, int op)
                 }
             }
             if (!found) {
-                scriptoutput(script->output, "ERROR: NO LABEL (%s)\n", script->stack[script->opindex+1]);
+                scriptoutput(script, "ERROR: NO LABEL (%s)\n", script->stack[script->opindex+1]);
                 script->error = script->opindex;
                 script->failed=true;
                 break;
@@ -280,7 +286,7 @@ void doop(baslike_t* script, int op)
                 }
             }
             if (enf == -1) {
-                scriptoutput(script->output, "ERROR: NO ENF\n");
+                scriptoutput(script, "ERROR: NO ENF\n");
                 script->error = script->opindex;
                 script->failed=true;
                 break;
@@ -338,7 +344,7 @@ void doop(baslike_t* script, int op)
                 }
             }
             if (enf == -1) {
-                scriptoutput(script->output, "ERROR: NO ENF\n");
+                scriptoutput(script, "ERROR: NO ENF\n");
                 script->error = script->opindex;
                 script->failed=true;
                 break;
@@ -511,7 +517,7 @@ void doop(baslike_t* script, int op)
             }
         } break;
         default: {
-            scriptoutput(script->output, "UNHANDLED OPERATION (%s)\n", script->stack[script->opindex]);
+            scriptoutput(script, "UNHANDLED OPERATION (%s)\n", script->stack[script->opindex]);
         } break;
     }
 }
