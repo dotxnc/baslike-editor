@@ -493,7 +493,7 @@ void doop(baslike_t* script, int op)
                 s+=3;
                 m = script->args[atoi(s)];
             }
-            else m = atoi(script->stack[script->opindex+1]);
+            else m = script->memory[atoi(script->stack[script->opindex+1])];
             
             if (script->infunction) {
                 script->ret = m;
