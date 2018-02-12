@@ -121,9 +121,14 @@ void handle_input();
 void handle_save();
 void handle_new();
 
+int test_funct(baslike_t* s) {
+    scriptoutput(s, "TEST FUNCT\n");
+    return -1;
+}
+
 int main(int argc, char** argv)
 {
-    InitWindow(640, 480, "BASLIKE 0.8.1");
+    InitWindow(640, 480, "BASLIKE 0.9.0");
     SetTargetFPS(60);
     SetExitKey(KEY_F12);
     
@@ -132,6 +137,7 @@ int main(int argc, char** argv)
     HEIGHT = MeasureTextEx(font, " ", 13, 0).y;
     
     reset(&script);
+    linkfunction(&script, test_funct, "TEST");
     
     while (!WindowShouldClose()) {
         handle_input();

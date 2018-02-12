@@ -18,6 +18,16 @@ typedef struct basfunc_t {
     int end;
 } basfunc_t;
 
+
+struct baslike_t;
+
+typedef int (*baslinkedfunc_t)(struct baslike_t*);
+
+typedef struct baslink_t {
+    baslinkedfunc_t function;
+    char name[32];
+} baslink_t;
+
 typedef struct baslike_t {
     char output[1024];
     char stack[512][32];
@@ -36,9 +46,11 @@ typedef struct baslike_t {
     int args[ARGS];
     int ret;
     bool infunction;
+    baslink_t linkedfunctions[512];
+    int numlinks;
 } baslike_t;
 
-static void scriptoutput(baslike_t* script, char* fmt, ...) {
+void scriptoutput(baslike_t* script, char* fmt, ...) {
     char buf[128];
     va_list va;
     va_start(va, fmt);
@@ -84,12 +96,13 @@ static void parseargs(baslike_t* script, char* _args) {
     free(token);
 }
 
-void execute    (baslike_t*, char*);
-void populate   (baslike_t*, char*);
-int  isop       (            char*);
-void doop       (baslike_t*,   int);
-void reset      (baslike_t*       );
-void preprocess (baslike_t*       );
+void execute      (baslike_t*, char*);
+void populate     (baslike_t*, char*);
+int  isop         (            char*);
+void doop         (baslike_t*,   int);
+void reset        (baslike_t*       );
+void preprocess   (baslike_t*       );
+void linkfunction (baslike_t*, baslinkedfunc_t, const char*);
 static char* ops[OPS] = {
     "MDS",
     "MDX",

@@ -13,6 +13,14 @@ void execute(baslike_t* script, char* text)
     }
 }
 
+void linkfunction(baslike_t* script, baslinkedfunc_t function, const char* name)
+{
+    baslink_t link;
+    link.function = function;
+    strcpy(link.name, name);
+    script->linkedfunctions[script->numlinks++] = link;
+}
+
 void reset(baslike_t* script) {
     for (int i = 0; i < script->stacksize; i++)
         memset(script->stack[i], '\0', 32);
@@ -24,6 +32,8 @@ void reset(baslike_t* script) {
         script->labels[i] = -1;
     for (int i = 0; i < script->functionsize; i++)
         script->functions[i] = (basfunc_t){};
+    // for (int i = 0; i < script->numlinks; i++)
+    //     script->linkedfunctions[i] = (baslink_t){};
     script->stacksize = 0;
     script->labelsize = 0;
     script->functionsize = 0;
@@ -429,9 +439,25 @@ void doop(baslike_t* script, int op)
                 }
             }
             if (fnc < 0) {
-                scriptoutput(script, "ERROR: NO FUNCTION %s\n", script->stack[oppos]);
-                script->error = script->opindex;
-                script->failed = true;
+                bool islinked = false;
+                for (int i = 0; i < script->numlinks; i++) {
+                    if (!strcmp(script->linkedfunctions[i].name, script->stack[oppos])) {
+                        if (isop(script->stack[oppos+1]) == OP_NON) {
+                            if (script->stack[oppos+1][0] == '<' && script->stack[oppos+1][strlen(script->stack[oppos+1])-1] == '>') {
+                                parseargs(script, script->stack[oppos+1]);
+                                oppos++;
+                            }
+                        }
+                        script->linkedfunctions[i].function(script);
+                        islinked = true;
+                        break;
+                    }
+                }
+                if (!islinked) {
+                    scriptoutput(script, "ERROR: NO FUNCTION %s\n", script->stack[oppos]);
+                    script->error = script->opindex;
+                    script->failed = true;
+                }
             } else {
                 script->opindex = script->functions[fnc].pos+1;
                 if (isop(script->stack[oppos+1]) == OP_NON) {
