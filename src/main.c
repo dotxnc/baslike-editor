@@ -126,6 +126,15 @@ int test_funct(baslike_t* s) {
     return -1;
 }
 
+int hash_funct(baslike_t* s) {
+    int x = s->args[0];
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = (x >> 16) ^ x;
+    s->ret = x;
+    return -1;
+}
+
 int main(int argc, char** argv)
 {
     InitWindow(640, 480, "BASLIKE 0.9.0");
@@ -138,6 +147,7 @@ int main(int argc, char** argv)
     
     reset(&script);
     linkfunction(&script, test_funct, "TEST");
+    linkfunction(&script, hash_funct, "HASH");
     
     while (!WindowShouldClose()) {
         handle_input();
@@ -176,6 +186,7 @@ int main(int argc, char** argv)
         
         ClearBackground(BLACK);
         BeginDrawing();
+            comment = false;
             cursorop = -1;
             int eindex = 0;
             for (int i = 0; i < DRAWMAX; i++) {
