@@ -442,6 +442,10 @@ void doop(baslike_t* script, int op)
                 }
                 script->infunction = true;
                 for (; script->opindex < script->functions[fnc].end; script->opindex++) {
+                    if (isop(script->stack[script->opindex]) == OP_RET) {
+                        doop(script, isop(script->stack[script->opindex]));
+                        break;
+                    }
                     doop(script, isop(script->stack[script->opindex]));
                     if (script->failed) break;
                 }
