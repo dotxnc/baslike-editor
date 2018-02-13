@@ -227,7 +227,7 @@ int main(int argc, char** argv)
             
             DrawRectangle(640-160, 50, 155, 380, script_running?ogray1:script.failed?ored1:ogreen1);
             DrawRectangleLines(640-160, 50, 155, 380, script_running?ogray2:script.failed?ored2:ogreen2);
-            DrawText(script.output, 640-150, 60, 10, WHITE);
+            DrawTextB(script.output, 640-150, 60, 13, WHITE);
             
             DrawRectangle(640-260, 50, 75, 180, script_running?ogray1:script.failed?ored1:ogreen1);
             DrawRectangleLines(640-260, 50, 75, 180, script_running?ogray2:script.failed?ored2:ogreen2);
@@ -341,8 +341,22 @@ void handle_input()
     if (IsKeyPressed(KEY_BACKSPACE)) {
         script.error = -1;
         if (cursorpos.x > 0) {
-            for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
-            cursorpos.x--;
+            int n = 0;
+            for (int i = cursorpos.x; i > 0; i--) {
+                if (lines[(int)cursorpos.y+startline][i-1] == ' ')
+                    n++;
+                else
+                    break;
+            }
+            if ((int)cursorpos.x%4==0 && n>=4) {
+                for (int i = 0; i < 4; i++) {
+                    for(int i = (int)cursorpos.x-1; i < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
+                    cursorpos.x--;
+                }
+            } else {
+                for(int i = (int)cursorpos.x-1; i  < MAXLENGTH - 1; i++) lines[(int)cursorpos.y+startline][i] = lines[(int)cursorpos.y+startline][i + 1];
+                cursorpos.x--;
+            }
         }
         else if (strlen(lines[(int)cursorpos.y+startline]) == 0 && cursorpos.y > 0) {
             for (int i = cursorpos.y+startline; i < MAXLINES-1; i++) {
