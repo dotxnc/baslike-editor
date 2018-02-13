@@ -137,7 +137,7 @@ int hash_funct(baslike_t* s) {
 
 int main(int argc, char** argv)
 {
-    InitWindow(640, 480, "BASLIKE 0.9.2");
+    InitWindow(640, 480, "BASLIKE 0.9.3");
     SetTargetFPS(60);
     SetExitKey(KEY_F12);
     

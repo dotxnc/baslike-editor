@@ -136,6 +136,8 @@ void doop(baslike_t* script, int op)
             else script->mds = atoi(script->stack[script->opindex+1]);
             script->opindex++;
         } break;
+        case OP_IFL:
+        case OP_IFG:
         case OP_IFE: {
             int els = -1;
             int enf = -1;
@@ -165,7 +167,11 @@ void doop(baslike_t* script, int op)
                 m = script->args[atoi(s)];
             }
             else m = atoi(script->stack[script->opindex+1]);
-            if (script->memory[script->mds] == m) {
+            bool b = false;
+            if (op == OP_IFE) b = (script->memory[script->mds] == m);
+            else if (op == OP_IFL) b = (script->memory[script->mds] < m);
+            else if (op == OP_IFG) b = (script->memory[script->mds] > m);
+            if (b) {
                 script->opindex+=2;
                 int to = els > -1 ? els : enf;
                 for (; script->opindex < to; script->opindex++) {
@@ -271,122 +277,6 @@ void doop(baslike_t* script, int op)
                 script->failed=true;
                 break;
             }
-        } break;
-        case OP_IFL: {
-            int els = -1;
-            int enf = -1;
-            for (int i = script->opindex; i < script->stacksize; i++) {
-                int eop = isop(script->stack[i]);
-                if (eop == OP_ENF) {
-                    enf = i;
-                    break;
-                }
-                if (eop == OP_ELS) {
-                    els = i;
-                }
-            }
-            if (enf == -1) {
-                scriptoutput(script, "ERROR: NO ENF\n");
-                script->error = script->opindex;
-                script->failed=true;
-                break;
-            }
-            int m;
-            bool jumped=false;
-            if (isop(script->stack[script->opindex+1]) == OP_MDX) m = script->memory[script->mdx];
-            else if (isop(script->stack[script->opindex+1]) == OP_RET) m = script->ret;
-            else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
-                char* s = script->stack[script->opindex+1];
-                s+=3;
-                m = script->args[atoi(s)];
-            }
-            else m = atoi(script->stack[script->opindex+1]);
-            if (script->memory[script->mds] < m) {
-                script->opindex+=2;
-                int to = els > -1 ? els : enf;
-                for (; script->opindex < to; script->opindex++) {
-                    if (isop(script->stack[script->opindex])==OP_JMP) {
-                        doop(script, isop(script->stack[script->opindex]));
-                        jumped=true;
-                        break;
-                    }
-                    doop(script, isop(script->stack[script->opindex]));
-                    if (script->failed) break;
-                }
-            } else {
-                if (els > -1) {
-                    script->opindex = els;
-                    for (; script->opindex < enf; script->opindex++) {
-                        if (isop(script->stack[script->opindex])==OP_JMP) {
-                            doop(script, isop(script->stack[script->opindex]));
-                            jumped=true;
-                            break;
-                        }
-                        doop(script, isop(script->stack[script->opindex]));
-                        if (script->failed) break;
-                    }
-                }
-            }
-            if (!jumped)
-                script->opindex = enf;
-        } break;
-        case OP_IFG: {
-            int els = -1;
-            int enf = -1;
-            for (int i = script->opindex; i < script->stacksize; i++) {
-                int eop = isop(script->stack[i]);
-                if (eop == OP_ENF) {
-                    enf = i;
-                    break;
-                }
-                if (eop == OP_ELS) {
-                    els = i;
-                }
-            }
-            if (enf == -1) {
-                scriptoutput(script, "ERROR: NO ENF\n");
-                script->error = script->opindex;
-                script->failed=true;
-                break;
-            }
-            int m;
-            bool jumped=false;
-            if (isop(script->stack[script->opindex+1]) == OP_MDX) m = script->memory[script->mdx];
-            else if (isop(script->stack[script->opindex+1]) == OP_RET) m = script->ret;
-            else if (startswith(script->stack[script->opindex+1], "ARG") && script->infunction) {
-                char* s = script->stack[script->opindex+1];
-                s+=3;
-                m = script->args[atoi(s)];
-            }
-            else m = atoi(script->stack[script->opindex+1]);
-            if (script->memory[script->mds] > m) {
-                script->opindex+=2;
-                int to = els > -1 ? els : enf;
-                for (; script->opindex < to; script->opindex++) {
-                    if (isop(script->stack[script->opindex])==OP_JMP) {
-                        doop(script, isop(script->stack[script->opindex]));
-                        jumped=true;
-                        break;
-                    }
-                    doop(script, isop(script->stack[script->opindex]));
-                    if (script->failed) break;
-                }
-            } else {
-                if (els > -1) {
-                    script->opindex = els;
-                    for (; script->opindex < enf; script->opindex++) {
-                        if (isop(script->stack[script->opindex])==OP_JMP) {
-                            doop(script, isop(script->stack[script->opindex]));
-                            jumped=true;
-                            break;
-                        }
-                        doop(script, isop(script->stack[script->opindex]));
-                        if (script->failed) break;
-                    }
-                }
-            }
-            if (!jumped)
-                script->opindex = enf;
         } break;
         case OP_MDX: {
             script->mdx = atoi(script->stack[script->opindex+1]);
