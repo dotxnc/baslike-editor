@@ -253,7 +253,8 @@ int main(int argc, char** argv)
             gui_label("Labels", 640-270, 30, 75, 25);
             gui_label("Functions", 640-260, 230, 75, 25);
             if (gui_button("Execute", 640-80-80, 5, 75, 25) && !editing_save) {
-                pthread_cancel(script_thread);
+                if (script_running)
+		    pthread_cancel(script_thread);
                 reset(&script);
                 script.failed = true;
                 script_running = false;
