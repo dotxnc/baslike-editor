@@ -42,7 +42,7 @@ void reset(baslike_t* script) {
     script->error = -1;
     script->infunction = false;
     script->ret = 0;
-    memset(script, '\0', 1024);
+    memset(script->output, '\0', 1024);
 }
 
 void preprocess(baslike_t* script)
@@ -104,15 +104,71 @@ void populate(baslike_t* script, char* text)
     int i;
     for (i=0;i<512;i++)memset(script->stack[i], '\0', 32);
     for (i=0;i<strlen(text);i++)if(text[i]=='\n')text[i]=' ';
-    int index = 0;
-    char *token = strtok(text, " \n");
-    while(token) {
-        strcpy(script->stack[index], token);
-        index++;
-        token = strtok(NULL, " ");
+    // int index = 0;
+    // char *token = strtok(text, " \n");
+    // while(token) {
+    //     strcpy(script->stack[index], token);
+    //     index++;
+    //     token = strtok(NULL, " ");
+    // }
+    // free(token);
+    // script->stacksize = index;
+    
+    // New population method
+    int li=0,state=0;
+    char line[32] = "";
+    while (*text) {
+        switch (state)
+        {
+            case 0:
+                if (*text == '"') {
+                    state = 1;
+                    if (strlen(line) > 0) {
+                        strcpy(script->stack[script->stacksize], line);
+                        script->stacksize++;
+                        memset(line, '\0', 32);
+                        li = 0;
+                    }
+                }
+                else if (*text == ' ') {
+                    if (strlen(line) > 0) {
+                        strcpy(script->stack[script->stacksize], line);
+                        script->stacksize++;
+                        memset(line, '\0', 32);
+                        li = 0;
+                    }
+                }
+                else {
+                    line[li] = *text;
+                    li++;
+                }
+                break;
+            case 1:
+                if (*text == '"') {
+                    state = 0;
+                    if (strlen(line) > 0) {
+                        strcpy(script->stack[script->stacksize], line);
+                        script->stacksize++;
+                        memset(line, '\0', 32);
+                        li = 0;
+                    }
+                }
+                else {
+                    line[li] = *text;
+                    li++;
+                }
+                break;
+            default:
+                break;
+        }
+        *text++;
     }
-    free(token);
-    script->stacksize = index;
+    if (strlen(line) > 0) {
+        strcpy(script->stack[script->stacksize], line);
+        script->stacksize++;
+        memset(line, '\0', 32);
+        li = 0;
+    }
 }
 
 int isop(char* op)
