@@ -93,29 +93,6 @@ void dump_text(char* file) {
 }
 
 static bool comment = false;
-void tokenize(char* string, char** tokens, int* num) {
-    // char str[strlen(string+1)];
-    char* str = (char*)malloc(sizeof(char)*strlen(string)+1);
-    strcpy(str, string);
-    for (int i = 0; i < strlen(str); i++) {
-        if (str[i] == '(') {
-            comment = true;
-        } else if (str[i] == ')') {
-            str[i] = ' ';
-            comment = false;
-        }
-        if (comment) {
-            str[i] = ' ';
-        }
-    }
-    char *token = strtok(str, " ");
-    int n = 0;
-    while(token) {
-        tokens[n++] = token;
-        token = strtok(NULL, " ");
-    }
-    *num = n;
-}
 
 void handle_input();
 void handle_save();
@@ -194,9 +171,90 @@ int main(int argc, char** argv)
                 DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, syntax[0]);
                 
                 // syntax highlighter
+                char* str = (char*)malloc(sizeof(char)*strlen(l)+1);
+                strcpy(str, l);
+                
                 int num = 0;
-                char* tokens[MAXLENGTH/2];
-                tokenize(l, tokens, &num);
+                char tokens[512][32];
+                char line[32];
+                memset(line, '\0', 32);
+                int li = 0;
+                int state = 0; // 0:dull, 1:string, 2:comment
+                int stacksize = 0;
+                if (comment) state = 2;
+                while (*str) {
+                    switch (state)
+                    {
+                        case 0:
+                            if (*str == '"') {
+                                state = 1;
+                                if (strlen(line) > 0) {
+                                    strcpy(tokens[num], line);
+                                    num++;
+                                    memset(line, '\0', 32);
+                                    li = 0;
+                                }
+                                
+                                line[li] = *str;
+                                li++;
+                            }
+                            else if (*str == ' ') {
+                                if (strlen(line) > 0) {
+                                    strcpy(tokens[num], line);
+                                    num++;
+                                    memset(line, '\0', 32);
+                                    li = 0;
+                                }
+                            }
+                            else if (*str == '(') {
+                                state = 2;
+                                if (strlen(line) > 0) {
+                                    strcpy(tokens[num], line);
+                                    num++;
+                                    memset(line, '\0', 32);
+                                    li = 0;
+                                }
+                            }
+                            else {
+                                line[li] = *str;
+                                li++;
+                            }
+                            break;
+                        case 1:
+                            if (*str == '"') {
+                                state = 0;
+                                line[li] = *str;
+                                li++;
+                                if (strlen(line) > 0) {
+                                    strcpy(tokens[num], line);
+                                    num++;
+                                    memset(line, '\0', 32);
+                                    li = 0;
+                                }
+                            }
+                            else {
+                                line[li] = *str;
+                                li++;
+                            }
+                            break;
+                        case 2:
+                            if (*str == ')') {
+                                state = 0;
+                            }
+                            *str++;
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                    // *str++;
+                    *str++;
+                }
+                if (strlen(line) > 0) {
+                    strcpy(tokens[num], line);
+                    num++;
+                }
+                free(str);
                 int size = 0;
                 int op = -1;
                 for (int j = 0; j < num; j++) {
