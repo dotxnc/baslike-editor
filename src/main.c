@@ -169,6 +169,7 @@ int main(int argc, char** argv)
             for (int i = 0; i < DRAWMAX; i++) {
                 char* l = strlen(lines[startline+i])>0 ? lines[startline+i] : i+startline<numlines?"":"~";
                 DrawTextB(FormatText("%03d: %s", startline+i, l), 10, 10+i*13, 13, syntax[0]);
+                if (strcmp(l, "~") == 0) continue;
                 
                 // syntax highlighter
                 char* str = (char*)malloc(sizeof(char)*strlen(l)+1);
@@ -246,15 +247,12 @@ int main(int argc, char** argv)
                         default:
                             break;
                     }
-                    
-                    // *str++;
                     *str++;
                 }
                 if (strlen(line) > 0) {
                     strcpy(tokens[num], line);
                     num++;
                 }
-                free(str);
                 int size = 0;
                 int op = -1;
                 for (int j = 0; j < num; j++) {

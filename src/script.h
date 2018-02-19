@@ -94,6 +94,7 @@ static void parseargs(baslike_t* script, char* _args) {
         token = strtok(NULL, ",");
     }
     free(token);
+    free(args);
 }
 
 void execute      (baslike_t*, char*);
